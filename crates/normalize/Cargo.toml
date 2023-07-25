@@ -1,0 +1,16 @@
+[package]
+name = "normalize"
+version.workspace = true
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ast.workspace = true
+
+[dev-dependencies]
+ast = { workspace = true, features = ["serde"] }
+common.workspace = true
+parse.workspace = true
+pretty_assertions = "1.4.0"
+ron = "0.8.0"

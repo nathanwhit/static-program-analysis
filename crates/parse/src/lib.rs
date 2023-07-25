@@ -287,9 +287,6 @@ mod tests {
     fn exp(i: impl Into<Exp>) -> Box<Exp> {
         i.into().into_box()
     }
-    fn exp_(i: impl Into<Exp>) -> Exp {
-        i.into()
-    }
 
     fn fun(
         name: &str,
@@ -391,15 +388,7 @@ mod tests {
         fun
         ---
         fun_works: "fun(a, b) { var c; output a + b; return a; }" => fun("fun", vec!["a", "b"], vec!["c"], vec![Stm::Output(bin_op("a", Op::Add, "b"))], id("a")),
-        fun_no_locals: "fun() { return 0; }" => fun("fun", vec![], vec![], vec![], int(0)),
-
-        fun_thing: "push() {
-            if l == 0 {
-                v.head = alloc node(null, el);
-                v.len = v.len + 1;
-            }
-            return v;
-        }" => fun("push", vec!["v", "el"], vec!["p", "l"], vec![], exp_("v"));
+        fun_no_locals: "fun() { return 0; }" => fun("fun", vec![], vec![], vec![], int(0));
 
         program
         -------

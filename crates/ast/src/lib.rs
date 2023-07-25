@@ -1,6 +1,12 @@
+extern crate self as ast;
+
+pub use print::Print;
+
 use core::fmt;
 
-use common::derive_common;
+use common::{derive_common, Foldable, SuperFoldable};
+pub mod fold;
+pub mod print;
 pub mod visit;
 
 pub type ExpBox = Box<Exp>;
@@ -45,16 +51,17 @@ impl From<&str> for Id {
 }
 
 #[derive_common]
+#[derive(SuperFoldable)]
 /// Expression
 pub enum Exp {
     /// Integer
-    Int(i64),
+    Int(#[fold(identity)] i64),
     /// Identifier
     Id(Id),
     /// (Exp)
     Paren(ExpBox),
     /// Exp Op Exp
-    BinOp(ExpBox, Op, ExpBox),
+    BinOp(ExpBox, #[fold(identity)] Op, ExpBox),
     /// input
     Input,
     /// fun(Exp, Exp, ...)
@@ -96,6 +103,7 @@ impl From<&str> for Exp {
 pub type StmBox = Box<Stm>;
 
 #[derive_common]
+#[derive(SuperFoldable)]
 /// Statement
 pub enum Stm {
     /// Id = Exp;
@@ -121,6 +129,7 @@ pub enum Stm {
 }
 
 #[derive_common]
+#[derive(SuperFoldable)]
 /// Function
 ///
 /// name(arg, arg, arg) { locals? stm return exp }
@@ -133,11 +142,13 @@ pub struct Fun {
 }
 
 #[derive_common]
+#[derive(SuperFoldable)]
 pub struct Program {
     pub funs: Vec<Fun>,
 }
 
 #[derive_common]
+#[derive(Foldable)]
 pub struct Record {
     pub fields: Vec<(Id, Exp)>,
 }

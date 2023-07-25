@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 common.workspace = true
+paste.workspace = true
 serde = { workspace = true, optional = true }
 
 [features]
