@@ -1,0 +1,22 @@
+[package]
+name = "interpret"
+version.workspace = true
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ast.workspace = true
+tracing.workspace = true
+thiserror = "1.0.44"
+serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+parse.workspace = true
+tracing-subscriber.workspace = true
+tracing-tree.workspace = true
+serde.workspace = true
+ast = { workspace = true, features = ["serde"] }
+
+[features]
+serde = ["ast/serde", "dep:serde"]

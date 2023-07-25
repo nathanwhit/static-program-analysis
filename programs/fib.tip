@@ -1,0 +1,20 @@
+fib(n) {
+    var out;
+    if n == 0 {
+        out = 1;
+    } else {
+        if n == 1 {
+            out = 1;
+        } else {
+            out = fib(n-1) + fib(n-2);
+        }
+    }
+    return out;
+}
+
+main() {
+    var n;
+    n = fib(35);
+    output n;
+    return 0;
+}

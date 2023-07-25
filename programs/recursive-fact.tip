@@ -1,0 +1,72 @@
+node(pred, val) {
+    var o;
+    o = { prev: pred, next: null, value: val };
+    return o;
+}
+
+vec() {
+    return { len: 0, head: null };
+}
+
+iter(v, cb) {
+    var c, _;
+
+    c = v.head;
+    while c != null {
+        _ = cb(c);
+        c = (*c).next;
+    }
+
+    return 0;
+}
+
+push(v, el) {
+    var p, n;
+    if v.len == 0 {
+        v.head = alloc node(null, el);
+        v.len = v.len + 1;
+    } else {
+        p = v.head;
+        while (*p).next != null {
+            p = (*p).next;
+        }
+        (*p).next = alloc node(p, el);
+        v.len = v.len + 1;
+    }
+    return v;
+}
+
+printNode(nodePtr) {
+    output (*nodePtr).value;
+    return 0;
+}
+
+printVec(v) {
+    var _;
+    _ = iter(v, printNode);
+    return 0;
+}
+
+incNode(nodePtr) {
+    var val;
+    val = (*nodePtr).value + 1;
+    (*nodePtr).value = val;
+    return 0;
+}
+
+main() {
+    var v, _, in;
+    v = vec();
+    v = push(v, 1);
+    v = push(v, 2);
+    v = push(v, 3);
+    in = input;
+    while in != -1 {
+        v = push(v, in);
+        in = input;
+    }
+    output v;
+    _ = iter(v, incNode);
+    _ = printVec(v);
+    return 0;
+}

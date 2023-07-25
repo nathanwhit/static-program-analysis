@@ -1,0 +1,11 @@
+[package]
+name = "ast"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+common.workspace = true
+serde = { workspace = true, optional = true }
+
+[features]
+serde = ["dep:serde"]
