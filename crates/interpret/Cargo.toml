@@ -10,6 +10,7 @@ ast.workspace = true
 tracing.workspace = true
 thiserror = "1.0.44"
 serde = { workspace = true, optional = true }
+rustc-hash = "1.1.0"
 
 [dev-dependencies]
 parse.workspace = true
@@ -17,6 +18,7 @@ tracing-subscriber.workspace = true
 tracing-tree.workspace = true
 serde.workspace = true
 ast = { workspace = true, features = ["serde"] }
+normalize.workspace = true
 
 [features]
 serde = ["ast/serde", "dep:serde"]

@@ -8,6 +8,8 @@ ariadne = "0.3.0"
 clap = { version = "4.3.19", features = ["derive"] }
 interpret.workspace = true
 parse.workspace = true
+normalize.workspace = true
+ast.workspace = true
 tracing.workspace = true
 tracing-tree.workspace = true
 tracing-subscriber.workspace = true

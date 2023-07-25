@@ -14,7 +14,7 @@ fib(n) {
 
 main() {
     var n;
-    n = fib(35);
+    n = fib(25);
     output n;
     return 0;
 }

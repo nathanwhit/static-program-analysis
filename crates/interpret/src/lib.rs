@@ -1,8 +1,8 @@
 use ast::Id;
 use core::fmt;
+use rustc_hash::FxHashMap;
 use std::{
     cell::RefCell,
-    collections::HashMap,
     io::{BufRead, BufReader, Write},
     rc::Rc,
 };
@@ -192,8 +192,8 @@ impl Value {
 
 #[derive(Clone, Default)]
 struct Interpreter<I, O> {
-    locals: HashMap<Id, Vec<Value>>,
-    functions: HashMap<Id, ast::Fun>,
+    locals: FxHashMap<Id, Vec<Value>>,
+    functions: FxHashMap<Id, ast::Fun>,
     input: I,
     output: O,
 }
@@ -243,8 +243,8 @@ where
         let mut interp = Self {
             input,
             output,
-            functions: HashMap::new(),
-            locals: HashMap::new(),
+            functions: FxHashMap::default(),
+            locals: FxHashMap::default(),
         };
         for fun in &program.funs {
             interp.functions.insert(fun.name.clone(), fun.clone());

@@ -11,8 +11,12 @@ struct Cli {
 
 fn main() -> Result<(), ()> {
     let cli = Cli::parse();
-    let _reg = Registry::default().with(HierarchicalLayer::new(2));
-    // let _guard = tracing::subscriber::set_default(reg);
+    let _guard = if std::env::var("RUST_LOG").is_ok() {
+        let _reg = Registry::default().with(HierarchicalLayer::new(2));
+        Some(tracing::subscriber::set_default(_reg))
+    } else {
+        None
+    };
 
     let file = std::fs::read_to_string(cli.file.clone()).unwrap();
     let path_str = cli.file.to_str().unwrap().to_owned();
