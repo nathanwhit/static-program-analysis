@@ -12,8 +12,10 @@ struct IdMaps {
 
 #[derive(Default)]
 struct UniqueIdents {
-    counter: u32,
+    var_counter: u32,
+    fun_counter: u32,
     maps: Option<IdMaps>,
+    fun_map: HashMap<Id, Id>,
 }
 
 impl UniqueIdents {
@@ -22,8 +24,16 @@ impl UniqueIdents {
     }
 
     fn new_var(&mut self) -> Id {
-        let id = Id::from(format!("var{}", self.counter));
-        self.counter += 1;
+        let id = Id::from(format!("var{}", self.var_counter));
+        self.var_counter += 1;
+
+        id
+    }
+
+    fn new_func(&mut self) -> Id {
+        let id = Id::from(format!("fun{}", self.fun_counter));
+        self.fun_counter += 1;
+
         id
     }
 
@@ -72,6 +82,10 @@ impl Folder for UniqueIdents {
             locals_map,
         };
         self.maps = Some(maps);
+        if !fun.is_main() {
+            let new_fun = self.new_func();
+            self.fun_map.insert(fun.name.clone(), new_fun);
+        }
         let new = fun.super_fold_with(self);
 
         self.maps = None;
@@ -84,12 +98,15 @@ impl Folder for UniqueIdents {
 
     fn fold_id(&mut self, id: Id) -> Id {
         if let Some(maps) = &self.maps {
-            if let Some(new) = maps.arg_map.get(&id) {
-                return new.clone();
-            }
             if let Some(new) = maps.locals_map.get(&id) {
                 return new.clone();
             }
+            if let Some(new) = maps.arg_map.get(&id) {
+                return new.clone();
+            }
+        }
+        if let Some(new) = self.fun_map.get(&id) {
+            return new.clone();
         }
         id
     }
@@ -130,7 +147,7 @@ mod test {
             printed,
             trim_indent(
                 "
-                thing(var0, var1, var2) {
+                fun0(var0, var1, var2) {
                     var var3, var4, var5;
                     var3 = 1;
                     var4 = 2;

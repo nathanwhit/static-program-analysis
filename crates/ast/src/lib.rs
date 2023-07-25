@@ -141,6 +141,12 @@ pub struct Fun {
     pub ret: Exp,
 }
 
+impl Fun {
+    pub fn is_main(&self) -> bool {
+        self.name.0.as_str() == "main"
+    }
+}
+
 #[derive_common]
 #[derive(SuperFoldable)]
 pub struct Program {
