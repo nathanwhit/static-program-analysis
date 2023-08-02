@@ -1,0 +1,23 @@
+---
+source: crates/parse/src/tests.rs
+description: "f(x, y) {\n  var a,b,c;\n  a = 1;\n  b = 2;\n  c = 3;\n  return a + b + c + x + y;\n}\n"
+input_file: crates/parse/test_data/parse/inline/ok/fun/0024_fun.tip
+---
+Fun(
+  name: Id("f"),
+  args: [
+    Id("x"),
+    Id("y"),
+  ],
+  locals: [
+    Id("a"),
+    Id("b"),
+    Id("c"),
+  ],
+  body: [
+    Assign(Id("a"), Int(1)),
+    Assign(Id("b"), Int(2)),
+    Assign(Id("c"), Int(3)),
+  ],
+  ret: BinOp(BinOp(BinOp(BinOp(Id(Id("a")), Add, Id(Id("b"))), Add, Id(Id("c"))), Add, Id(Id("x"))), Add, Id(Id("y"))),
+)

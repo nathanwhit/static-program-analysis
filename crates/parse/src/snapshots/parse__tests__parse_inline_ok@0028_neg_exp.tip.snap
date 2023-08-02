@@ -1,0 +1,6 @@
+---
+source: crates/parse/src/tests.rs
+description: "--x\n"
+input_file: crates/parse/test_data/parse/inline/ok/exp/0028_neg_exp.tip
+---
+UnaryOp(Neg, UnaryOp(Neg, Id(Id("x"))))

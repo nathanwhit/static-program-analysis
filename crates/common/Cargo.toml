@@ -7,3 +7,8 @@ edition.workspace = true
 
 [dependencies]
 macros.workspace = true
+la-arena = "0.3.1"
+serde = { workspace = true, optional = true }
+
+[features]
+serde = ["dep:serde"]

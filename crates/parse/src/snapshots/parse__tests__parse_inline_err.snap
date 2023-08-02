@@ -1,0 +1,6 @@
+---
+source: crates/parse/src/tests.rs
+description: "f() {}\n"
+input_file: crates/parse/test_data/parse/inline/err/fun/0011_fun_no_return.tip
+---
+ParseError: Expected return statement

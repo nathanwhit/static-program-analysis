@@ -20,24 +20,22 @@ fn main() -> Result<(), ()> {
 
     let file = std::fs::read_to_string(cli.file.clone()).unwrap();
     let path_str = cli.file.to_str().unwrap().to_owned();
-    let ast = match parse::parse(&file) {
+    let (ctx, ast) = match parse::parse(&file) {
         Ok(ast) => ast,
-        Err(errs) => {
-            for err in errs {
-                let cache = sources(vec![(path_str.clone(), file.as_str())]);
-                Report::build::<&str>(ReportKind::Error, path_str.as_str(), err.span().start)
-                    .with_label(
-                        Label::new((path_str.clone(), err.span().into_range()))
-                            .with_message(err.reason()),
-                    )
-                    .finish()
-                    .print(cache)
-                    .unwrap();
-            }
+        Err(err) => {
+            let cache = sources(vec![(path_str.clone(), file.as_str())]);
+            Report::build::<&str>(ReportKind::Error, path_str.as_str(), err.span.start)
+                .with_label(
+                    Label::new((path_str.clone(), err.span.into_range()))
+                        .with_message(err.to_string()),
+                )
+                .finish()
+                .print(cache)
+                .unwrap();
             return Err(());
         }
     };
-    let _output = interpret::program(&ast).unwrap();
+    let _output = interpret::program(&ctx, &ast).unwrap();
 
     Ok(())
 }

@@ -1,0 +1,6 @@
+---
+source: crates/parse/src/tests.rs
+description: "{\n return 1;\n}\n"
+input_file: crates/parse/test_data/parse/inline/err/stm/0010_return_outside_fun.tip
+---
+ParseError: Can only return from inside a function

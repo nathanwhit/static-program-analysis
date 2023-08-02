@@ -1,0 +1,10 @@
+---
+source: crates/parse/src/tests.rs
+description: "if 1 { a = 1; } else { a = 2; }\n"
+input_file: crates/parse/test_data/parse/inline/ok/stm/0018_if_else.tip
+---
+If(Int(1), Block([
+  Assign(Id("a"), Int(1)),
+]), Block([
+  Assign(Id("a"), Int(2)),
+]))

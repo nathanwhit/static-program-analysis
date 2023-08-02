@@ -1,0 +1,10 @@
+f(x, y) {
+ return 0;
+}
+g(x, y) {
+ return 1;
+}
+main() {
+ output f(1, 2) + g(3, 4);
+ return 0;
+}

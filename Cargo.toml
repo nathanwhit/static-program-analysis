@@ -14,6 +14,9 @@ tracing-subscriber = { version = "0.3.17", features = ["fmt"] }
 tracing-tree = "0.2.4"
 serde = { version = "1.0.175", features = ["derive", "rc"] }
 paste = "1.0.14"
+thiserror = "1.0.44"
+pretty_assertions = "1.4.0"
+sourcegen = { path = "./crates/sourcegen" }
 
 [workspace.package]
 version = "0.1.0"

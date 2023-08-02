@@ -1,0 +1,44 @@
+---
+source: crates/parse/src/tests.rs
+description: "f(x, y) {\n return 0;\n}\ng(x, y) {\n return 1;\n}\nmain() {\n output f(1, 2) + g(3, 4);\n return 0;\n}\n"
+input_file: crates/parse/test_data/parse/inline/ok/file/0026_program.tip
+---
+Program(
+  funs: [
+    Fun(
+      name: Id("f"),
+      args: [
+        Id("x"),
+        Id("y"),
+      ],
+      locals: [],
+      body: [],
+      ret: Int(0),
+    ),
+    Fun(
+      name: Id("g"),
+      args: [
+        Id("x"),
+        Id("y"),
+      ],
+      locals: [],
+      body: [],
+      ret: Int(1),
+    ),
+    Fun(
+      name: Id("main"),
+      args: [],
+      locals: [],
+      body: [
+        Output(BinOp(Call(Id(Id("f")), [
+          Int(1),
+          Int(2),
+        ]), Add, Call(Id(Id("g")), [
+          Int(3),
+          Int(4),
+        ]))),
+      ],
+      ret: Int(0),
+    ),
+  ],
+)

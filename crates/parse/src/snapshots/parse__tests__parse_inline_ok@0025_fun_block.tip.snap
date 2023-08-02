@@ -1,0 +1,14 @@
+---
+source: crates/parse/src/tests.rs
+description: "f() {\n var a;\n return a;\n}\n"
+input_file: crates/parse/test_data/parse/inline/ok/fun/0025_fun_block.tip
+---
+Fun(
+  name: Id("f"),
+  args: [],
+  locals: [
+    Id("a"),
+  ],
+  body: [],
+  ret: Id(Id("a")),
+)

@@ -1,0 +1,6 @@
+---
+source: crates/parse2/src/tests.rs
+description: "&1\n"
+input_file: crates/parse2/test_data/parse/inline/err/exp/0003_ref_exp_no_id.tip
+---
+ParseError: Can only take reference of id

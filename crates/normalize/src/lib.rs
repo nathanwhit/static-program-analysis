@@ -37,25 +37,25 @@ impl UniqueIdents {
         id
     }
 
-    fn normalize(&mut self, program: ast::Program) -> ast::Program {
-        self.fold_program(program)
+    fn normalize(&mut self, ctx: &mut ast::AstCtx, program: ast::Program) -> ast::Program {
+        self.fold_program(ctx, program)
     }
 }
 
-pub fn normalize_unique_idents(program: ast::Program) -> ast::Program {
-    UniqueIdents::new().normalize(program)
+pub fn normalize_unique_idents(ctx: &mut ast::AstCtx, program: ast::Program) -> ast::Program {
+    UniqueIdents::new().normalize(ctx, program)
 }
 
 impl Folder for UniqueIdents {
-    fn fold_exp(&mut self, exp: ast::Exp) -> ast::Exp {
-        exp.super_fold_with(self)
+    fn fold_exp(&mut self, ctx: &mut ast::AstCtx, exp: ast::Exp) -> ast::Exp {
+        exp.super_fold_with(ctx, self)
     }
 
-    fn fold_stm(&mut self, stm: ast::Stm) -> ast::Stm {
-        stm.super_fold_with(self)
+    fn fold_stm(&mut self, ctx: &mut ast::AstCtx, stm: ast::Stm) -> ast::Stm {
+        stm.super_fold_with(ctx, self)
     }
 
-    fn fold_fun(&mut self, fun: ast::Fun) -> ast::Fun {
+    fn fold_fun(&mut self, ctx: &mut ast::AstCtx, fun: ast::Fun) -> ast::Fun {
         let arg_map = fun
             .args
             .iter()
@@ -86,7 +86,7 @@ impl Folder for UniqueIdents {
             let new_fun = self.new_func();
             self.fun_map.insert(fun.name.clone(), new_fun);
         }
-        let new = fun.super_fold_with(self);
+        let new = fun.super_fold_with(ctx, self);
 
         self.maps = None;
         ast::Fun {
@@ -96,7 +96,7 @@ impl Folder for UniqueIdents {
         }
     }
 
-    fn fold_id(&mut self, id: Id) -> Id {
+    fn fold_id(&mut self, _ctx: &mut ast::AstCtx, id: Id) -> Id {
         if let Some(maps) = &self.maps {
             if let Some(new) = maps.locals_map.get(&id) {
                 return new.clone();
@@ -139,12 +139,11 @@ mod test {
                     return 0;
                 }",
         );
-        let parsed = parse::parse(&input).unwrap();
-        let normalized = super::normalize_unique_idents(parsed);
-        let printed = trim_indent(normalized.print().as_ref());
+        let (mut ast_ctx, parsed) = parse::parse(&input).unwrap();
+        let normalized = super::normalize_unique_idents(&mut ast_ctx, parsed);
+        let printed = trim_indent(normalized.print(&mut ast_ctx).as_ref());
 
         assert_eq!(
-            printed,
             trim_indent(
                 "
                 fun0(var0, var1, var2) {
@@ -163,7 +162,8 @@ mod test {
                     output var8;
                     return 0;
                 }",
-            )
+            ),
+            printed,
         );
     }
 }

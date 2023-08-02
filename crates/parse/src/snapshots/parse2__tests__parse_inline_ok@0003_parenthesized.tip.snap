@@ -1,0 +1,6 @@
+---
+source: crates/parse2/src/tests.rs
+description: "(1)\n"
+input_file: crates/parse2/test_data/parse/inline/ok/exp/0003_parenthesized.tip
+---
+Int(1)

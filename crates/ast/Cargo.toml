@@ -8,5 +8,11 @@ common.workspace = true
 paste.workspace = true
 serde = { workspace = true, optional = true }
 
+[dev-dependencies]
+ron = "0.8.0"
+serde.workspace = true
+pretty_assertions.workspace = true
+common = { workspace = true, features = ["serde"] }
+
 [features]
-serde = ["dep:serde"]
+serde = ["dep:serde", "common/serde"]

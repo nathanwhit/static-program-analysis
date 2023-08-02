@@ -1,0 +1,11 @@
+---
+source: crates/parse2/src/tests.rs
+description: "{ x: 1, y: 2 }\n"
+input_file: crates/parse2/test_data/parse/inline/ok/exp/0001_record.tip
+---
+Record(Record(
+  fields: [
+    (Id("x"), Int(1)),
+    (Id("y"), Int(2)),
+  ],
+))

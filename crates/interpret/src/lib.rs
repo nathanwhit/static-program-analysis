@@ -1,4 +1,5 @@
-use ast::Id;
+use ast::{AstCtx, Id};
+use common::Get;
 use core::fmt;
 use rustc_hash::FxHashMap;
 use std::{
@@ -138,10 +139,10 @@ impl fmt::Display for Value {
 }
 
 impl Value {
-    fn as_int(&self, op: ast::Op) -> Result<i64> {
+    fn as_int(&self, op: impl Into<ast::Op>) -> Result<i64> {
         match self {
             Value::Int(int) => Ok(*int),
-            _ => Err(Error::InvalidOperand("int".to_string(), Some(op))),
+            _ => Err(Error::InvalidOperand("int".to_string(), Some(op.into()))),
         }
     }
     fn is_truthy(&self) -> bool {
@@ -190,15 +191,16 @@ impl Value {
     }
 }
 
-#[derive(Clone, Default)]
-struct Interpreter<I, O> {
+#[derive(Clone)]
+struct Interpreter<'ast, I, O> {
     locals: FxHashMap<Id, Vec<Value>>,
     functions: FxHashMap<Id, ast::Fun>,
+    ast_ctx: &'ast AstCtx,
     input: I,
     output: O,
 }
 
-impl<I, O> fmt::Debug for Interpreter<I, O> {
+impl<I, O> fmt::Debug for Interpreter<'_, I, O> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Interpreter")
             .field("locals", &self.locals)
@@ -207,7 +209,7 @@ impl<I, O> fmt::Debug for Interpreter<I, O> {
     }
 }
 
-impl<I, O> Interpreter<I, O> {
+impl<I, O> Interpreter<'_, I, O> {
     #[tracing::instrument(skip(self))]
     fn push_local(&mut self, id: Id, value: Value) {
         self.locals.entry(id).or_default().push(value);
@@ -228,23 +230,35 @@ impl<I, O> Interpreter<I, O> {
     }
 }
 
-impl Interpreter<BufReader<std::io::Stdin>, std::io::Stdout> {
-    fn new(program: &ast::Program) -> Self {
-        Self::with_buf_io(program, BufReader::new(std::io::stdin()), std::io::stdout())
+impl<'ast> Interpreter<'ast, BufReader<std::io::Stdin>, std::io::Stdout> {
+    fn new(ast_ctx: &'ast AstCtx, program: &ast::Program) -> Self {
+        Self::with_buf_io(
+            ast_ctx,
+            program,
+            BufReader::new(std::io::stdin()),
+            std::io::stdout(),
+        )
     }
 }
 
-impl<I, O> Interpreter<I, O>
+macro_rules! get {
+    ($s: ident, $e: expr) => {
+        $s.ast_ctx.get($e)
+    };
+}
+
+impl<'ast, I, O> Interpreter<'ast, I, O>
 where
     I: BufRead,
     O: Write,
 {
-    fn with_buf_io(program: &ast::Program, input: I, output: O) -> Self {
+    fn with_buf_io(ast_ctx: &'ast AstCtx, program: &ast::Program, input: I, output: O) -> Self {
         let mut interp = Self {
             input,
             output,
             functions: FxHashMap::default(),
             locals: FxHashMap::default(),
+            ast_ctx,
         };
         for fun in &program.funs {
             interp.functions.insert(fun.name.clone(), fun.clone());
@@ -306,10 +320,11 @@ where
         }
 
         for stm in &fun.body {
+            let stm = get!(self, stm);
             self.eval_stm(stm)?;
         }
 
-        let ret = self.eval_exp(&fun.ret)?;
+        let ret = self.eval_exp(get!(self, fun.ret))?;
 
         for local in &fun.locals {
             self.pop_local(local.clone());
@@ -327,12 +342,18 @@ where
         Ok(match exp {
             ast::Exp::Int(int) => Value::Int(*int),
             ast::Exp::Id(id) => self.resolve(id)?,
-            ast::Exp::Paren(inner) => self.eval_exp(inner)?,
+            ast::Exp::UnaryOp(op, rhs) => {
+                let rhs = self.eval_exp(get!(self, rhs))?;
+
+                match op {
+                    ast::UnaryOp::Neg => Value::Int(-rhs.as_int(*op)?),
+                }
+            }
             ast::Exp::BinOp(lhs, op, rhs) => {
                 let op = *op;
-                let lhs = self.eval_exp(lhs)?;
-                let rhs = self.eval_exp(rhs)?;
-                use ast::Op::*;
+                let lhs = self.eval_exp(get!(self, lhs))?;
+                let rhs = self.eval_exp(get!(self, rhs))?;
+                use ast::BinaryOp::*;
                 match op {
                     Add | Sub | Mul | Div => {
                         let lhs = lhs.as_int(op)?;
@@ -370,15 +391,20 @@ where
                 )
             }
             ast::Exp::Call(fun, args) => {
+                let fun = get!(self, fun);
                 let fun = self.eval_exp(fun)?;
                 let fun = fun.as_fun()?;
                 let args = args
                     .iter()
-                    .map(|arg| self.eval_exp(arg))
+                    .map(|arg| {
+                        let arg = get!(self, arg);
+                        self.eval_exp(arg)
+                    })
                     .collect::<Result<Vec<_>>>()?;
                 self.eval_call(fun, &args)?
             }
             ast::Exp::Alloc(exp) => {
+                let exp = get!(self, exp);
                 let val = self.eval_exp(exp)?;
 
                 Value::Ref(Rc::new(RefCell::new(val)))
@@ -389,6 +415,7 @@ where
                 Value::Ref(val)
             }
             ast::Exp::Deref(exp) => {
+                let exp = get!(self, exp);
                 let refer = self.eval_exp(exp)?;
                 let refer = refer.as_ref()?;
                 let derefed = refer.borrow().clone();
@@ -398,11 +425,19 @@ where
                 let fields = rec
                     .fields
                     .iter()
-                    .map(|(id, exp)| Ok((id.clone(), self.eval_exp(exp)?)))
+                    .map(
+                        |ast::Field {
+                             name: id,
+                             value: exp,
+                         }| {
+                            Ok((id.clone(), self.eval_exp(get!(self, exp))?))
+                        },
+                    )
                     .collect::<Result<Vec<_>>>()?;
                 Value::Record(Record { fields })
             }
             ast::Exp::FieldAccess(rec, field) => {
+                let rec = get!(self, rec);
                 let rec = self.eval_exp(rec)?;
                 let rec = rec.as_record()?;
                 let field = rec
@@ -421,19 +456,25 @@ where
     fn eval_stm(&mut self, stm: &ast::Stm) -> Result<()> {
         match stm {
             ast::Stm::Assign(lhs, rhs) => {
+                let rhs = get!(self, rhs);
                 let val = self.eval_exp(rhs)?;
                 self.store_local(lhs.clone(), val)?;
             }
             ast::Stm::Output(exp) => {
+                let exp = get!(self, exp);
                 let val = self.eval_exp(exp)?;
                 writeln!(self.output, "{}", val).adapt_err()?;
             }
             ast::Stm::Block(stms) => {
                 for stm in stms {
+                    let stm = get!(self, stm);
                     self.eval_stm(stm)?;
                 }
             }
             ast::Stm::If(cond, then, else_) => {
+                let cond = get!(self, cond);
+                let then = get!(self, then);
+                let else_ = else_.as_ref().map(|else_| get!(self, else_));
                 let cond = self.eval_exp(cond)?;
                 if cond.is_truthy() {
                     self.eval_stm(then)?;
@@ -442,6 +483,8 @@ where
                 }
             }
             ast::Stm::While(cond, body) => {
+                let cond = get!(self, cond);
+                let body = get!(self, body);
                 while self.eval_exp(cond)?.is_truthy() {
                     self.eval_stm(body)?;
                 }
@@ -449,12 +492,15 @@ where
             ast::Stm::Locals(_) => todo!(),
             ast::Stm::Return(_) => todo!(),
             ast::Stm::Store(lhs, rhs) => {
+                let lhs = get!(self, lhs);
+                let rhs = get!(self, rhs);
                 let rhs = self.eval_exp(rhs)?;
                 let lhs = self.eval_exp(lhs)?;
                 let lhs = lhs.as_ref()?;
                 *lhs.borrow_mut() = rhs;
             }
             ast::Stm::FieldUpdate(rec, field, rhs) => {
+                let rhs = get!(self, rhs);
                 let rhs = self.eval_exp(rhs)?;
                 let rec = self.resolve_local(rec)?;
                 let rec = rec.as_record_mut()?;
@@ -466,6 +512,8 @@ where
                 field.1 = rhs;
             }
             ast::Stm::IndirectFieldUpdate(ptr, field, rhs) => {
+                let ptr = get!(self, ptr);
+                let rhs = get!(self, rhs);
                 let ptr = self.eval_exp(ptr)?;
                 let ptr = ptr.as_ref()?;
                 let mut ptr = ptr.borrow_mut();
@@ -483,8 +531,8 @@ where
     }
 }
 
-pub fn program(program: &ast::Program) -> Result<Value> {
-    let mut interpreter = Interpreter::new(program);
+pub fn program<'ast>(ast_ctx: &'ast AstCtx, program: &ast::Program) -> Result<Value> {
+    let mut interpreter = Interpreter::new(ast_ctx, program);
     interpreter.eval()
 }
 
@@ -529,10 +577,14 @@ mod test {
     fn run(prog: &str) -> Result<Value, Box<dyn std::error::Error + 'static>> {
         let reg = Registry::default().with(HierarchicalLayer::new(2));
         let _trace = tracing::subscriber::set_default(reg);
-        let prog = parse::parse(prog).unwrap();
+        let (ctx, prog) = match parse::parse(prog) {
+            Ok((ctx, prog)) => (ctx, prog),
+            Err(e) => panic!("{} at {}", e, &prog[e.span.into_range()]),
+        };
         let input = InputLines(vec![], 0);
         let output = Output(vec![]);
-        let mut interp = super::Interpreter::with_buf_io(&prog, BufReader::new(input), output);
+        let mut interp =
+            super::Interpreter::with_buf_io(&ctx, &prog, BufReader::new(input), output);
         interp.eval().map_err(|e| e.into())
     }
     macro_rules! test {

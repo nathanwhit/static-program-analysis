@@ -1,0 +1,6 @@
+---
+source: crates/parse/src/tests.rs
+description: "*x = 1;\n"
+input_file: crates/parse/test_data/parse/inline/ok/stm/0023_store.tip
+---
+Store(Id(Id("x")), Int(1))

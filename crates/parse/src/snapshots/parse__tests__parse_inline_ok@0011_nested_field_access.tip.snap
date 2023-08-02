@@ -1,0 +1,6 @@
+---
+source: crates/parse/src/tests.rs
+description: "x.y + (*alloc x).z.w\n"
+input_file: crates/parse/test_data/parse/inline/ok/exp/0011_nested_field_access.tip
+---
+BinOp(FieldAccess(Id(Id("x")), Id("y")), Add, FieldAccess(FieldAccess(Deref(Alloc(Id(Id("x")))), Id("z")), Id("w")))

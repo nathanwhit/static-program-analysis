@@ -1,0 +1,6 @@
+---
+source: crates/parse/src/tests.rs
+description: "{\n var x;\n}\n"
+input_file: crates/parse/test_data/parse/inline/err/stm/0012_var_outside_fun.tip
+---
+ParseError: Can only declare locals at top of function body

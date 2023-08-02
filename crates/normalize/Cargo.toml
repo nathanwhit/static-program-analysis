@@ -12,5 +12,5 @@ ast.workspace = true
 ast = { workspace = true, features = ["serde"] }
 common.workspace = true
 parse.workspace = true
-pretty_assertions = "1.4.0"
+pretty_assertions.workspace = true
 ron = "0.8.0"

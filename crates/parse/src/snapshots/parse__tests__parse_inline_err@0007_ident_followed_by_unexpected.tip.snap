@@ -1,0 +1,6 @@
+---
+source: crates/parse/src/tests.rs
+description: "x &1;\n"
+input_file: crates/parse/test_data/parse/inline/err/stm/0007_ident_followed_by_unexpected.tip
+---
+ParseError: Expected assignment or field update

@@ -8,9 +8,10 @@ edition.workspace = true
 [dependencies]
 ast.workspace = true
 tracing.workspace = true
-thiserror = "1.0.44"
 serde = { workspace = true, optional = true }
 rustc-hash = "1.1.0"
+common.workspace = true
+thiserror.workspace = true
 
 [dev-dependencies]
 parse.workspace = true

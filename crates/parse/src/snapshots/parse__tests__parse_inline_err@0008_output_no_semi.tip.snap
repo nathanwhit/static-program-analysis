@@ -1,0 +1,6 @@
+---
+source: crates/parse/src/tests.rs
+description: "output 1\n"
+input_file: crates/parse/test_data/parse/inline/err/stm/0008_output_no_semi.tip
+---
+ParseError: Expected Semi, found Eof

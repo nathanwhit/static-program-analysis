@@ -1,0 +1,16 @@
+---
+source: crates/parse2/src/tests.rs
+description: "{ x: { y: 1, z: 2 }, y: 2 }\n"
+input_file: crates/parse2/test_data/parse/inline/ok/exp/0002_record_nested.tip
+---
+Record(Record(
+  fields: [
+    (Id("x"), Record(Record(
+      fields: [
+        (Id("y"), Int(1)),
+        (Id("z"), Int(2)),
+      ],
+    ))),
+    (Id("y"), Int(2)),
+  ],
+))
