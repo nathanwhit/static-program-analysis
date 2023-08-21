@@ -242,8 +242,6 @@ pub enum Exp {
     FieldAccess(#[id] ExpId, Id),
     /// null
     Null,
-    /// Error
-    Error,
 }
 
 impl From<i64> for Exp {

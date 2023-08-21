@@ -96,7 +96,6 @@ impl Print for Exp {
                 p!("{}.{}", exp.lookup(ctx).print(ctx), field.print(ctx))
             }
             Exp::Null => "null".into(),
-            Exp::Error => "error".into(),
         }
     }
 }

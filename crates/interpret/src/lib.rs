@@ -448,7 +448,6 @@ where
                 field.1.clone()
             }
             ast::Exp::Null => Value::Null,
-            ast::Exp::Error => unreachable!(),
         })
     }
 
@@ -574,9 +573,9 @@ mod test {
     }
 
     #[track_caller]
-    fn run(prog: &str) -> Result<Value, Box<dyn std::error::Error + 'static>> {
+    fn run(prog: &str, log: bool) -> Result<Value, Box<dyn std::error::Error + 'static>> {
         let reg = Registry::default().with(HierarchicalLayer::new(2));
-        let _trace = tracing::subscriber::set_default(reg);
+        let _trace = log.then(|| tracing::subscriber::set_default(reg));
         let (ctx, prog) = match parse::parse(prog) {
             Ok((ctx, prog)) => (ctx, prog),
             Err(e) => panic!("{} at {}", e, &prog[e.span.into_range()]),
@@ -588,22 +587,28 @@ mod test {
         interp.eval().map_err(|e| e.into())
     }
     macro_rules! test {
-        (@name = $name: ident, @in = $in: expr, @out = $out: expr, @fail = ) => {
+        (#make_log @log = ) => {
+            false
+        };
+        (#make_log @log = $log: ident) => {
+            true
+        };
+        (#make_run @in = $in: expr, @fail = , @log = $($log: ident)?) => {
+            run($in, test!(#make_log @log = $($log)?)).unwrap()
+        };
+        (#make_run @in = $in: expr, @fail = $fail: ident, @log = $($log: ident)?) => {
+            run($in, test!(#make_log @log = $($log)?)).unwrap_err()
+        };
+        (@name = $name: ident, @in = $in: expr, @out = $out: expr, @fail = $($fail: ident)?, @log = $($log: ident)?) => {
             #[test]
             fn $name() {
-                assert_eq!(run($in).unwrap(), $out);
+                assert_eq!(test!(#make_run @in = $in, @fail = $($fail)?, @log = $($log)?), $out);
             }
         };
-        (@name = $name: ident, @in = $in: expr, @out = $out: expr, @fail = $fail: ident) => {
-            #[test]
-            fn $name() {
-                assert_eq!(run($in).unwrap_err(), $out);
-            }
-        };
-        ($($(#$fail: ident )? $name: ident : $in: expr => $out: expr),+ $(,)?) => {
+        ($($(~$log: ident)? $(#$fail: ident )? $name: ident : $in: expr => $out: expr),+ $(,)?) => {
 
             $(
-                test!(@name = $name, @in = $in, @out = $out, @fail = $($fail)?);
+                test!(@name = $name, @in = $in, @out = $out, @fail = $($fail)?, @log = $($log)?);
             )+
 
         };
